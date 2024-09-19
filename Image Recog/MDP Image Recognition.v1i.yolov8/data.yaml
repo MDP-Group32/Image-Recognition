@@ -1,0 +1,13 @@
+train: ../train/images
+val: ../valid/images
+test: ../test/images
+
+nc: 31
+names: ['A_id20', 'B_id21', 'C_id22', 'D_id23', 'E_id24', 'F_id25', 'G_id26', 'H_id27', 'S_id28', 'T_id29', 'U_id30', 'V_id31', 'W_id32', 'X_id33', 'Y_id34', 'Z_id35', 'bullseye-id10', 'downarrow_id37', 'eight_id18', 'five_id15', 'four_id14', 'leftarrow_id39', 'nine_id19', 'one_id11', 'rightarrow_id38', 'seven_id17', 'six_id16', 'stop_id40', 'three_id13', 'two_id12', 'uparrow_id36']
+
+roboflow:
+  workspace: mdp-image-recognition-rky6t
+  project: mdp-image-recognition-r7dyf
+  version: 1
+  license: CC BY 4.0
+  url: https://universe.roboflow.com/mdp-image-recognition-rky6t/mdp-image-recognition-r7dyf/dataset/1
