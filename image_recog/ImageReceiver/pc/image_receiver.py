@@ -2,7 +2,10 @@ import os
 import shutil
 import imagezmq
 import cv2
-from image_recog import image_recog
+import image_recog_script
+
+
+# from image_recog import Client
 
 class TestSending:
     def __init__(self):
@@ -13,7 +16,7 @@ class TestSending:
         print('Current dir: ', current_dir)
         
         # Construct the path to the "images" directory one level above
-        model_dir = os.path.abspath(os.path.join(current_dir, '..', '..', 'image_recog', 'best.pt'))
+        model_dir = os.path.abspath(os.path.join(current_dir, '..', '..', 'best.pt'))
         print('Model dir: ', model_dir)
         return model_dir
     
@@ -46,14 +49,18 @@ class TestSending:
 class ImageReceiver:
     def __init__(self):
         # Initialize ImageHub to receive images
-        self.image_hub = imagezmq.ImageHub(open_port="tcp://192.168.32.14:5555")
+        # self.image_hub = imagezmq.ImageHub(open_port="tcp://192.168.32.14:5555")
+        print('init')
+        self.image_hub = imagezmq.ImageHub(open_port="tcp://*:5555")
+        print('init finish')
 
     def get_model_path(self):
         current_dir = os.path.dirname(os.path.abspath(__file__))
         print('Current dir: ', current_dir)
         
         # Construct the path to the "images" directory one level above
-        model_dir = os.path.abspath(os.path.join(current_dir, '..', '..', 'image_recog', 'best.pt'))
+        # model_dir = os.path.abspath(os.path.join(current_dir, '..', '..', 'image_recog', 'best.pt'))
+        model_dir = os.path.abspath(os.path.join(current_dir, '..', '..', 'best.pt'))
         print('Model dir: ', model_dir)
         return model_dir
 
@@ -86,34 +93,39 @@ class ImageReceiver:
         #     print(f'{image_file} not found in the current directory.')
 
     def receive_image(self):
+        print('before loop')
         while True:
             try:
-                rpi_name, image = self.image_hub.recv_image()
-                print(f"Received image from {rpi_name}")
+                    print('entered loop')
+                    rpi_name, image = self.image_hub.recv_image()
+                    print(f"Received image from {rpi_name}")
 
-                # Display the image using OpenCV
-                # cv2.imshow(f"Image from {rpi_name}", image)
-                # cv2.waitKey(1)
-                save_dir = self.get_save_directory()
-                # Construct the full path to save the image
-                image_filename = os.path.join(save_dir, f"{rpi_name}.jpg")
-                cv2.imwrite(image_filename, image)
-                print(f"Image saved to {image_filename}")
-                # Send a reply to acknowledge receipt
-                self.image_hub.send_reply(b'Image received')
+                    # Display the image using OpenCV
+                    cv2.imshow(f"Image from {rpi_name}", image)
+                    cv2.waitKey(1)
+                    save_dir = self.get_save_directory()
+                    # Construct the full path to save the image
+                    image_filename = os.path.join(save_dir, f"{rpi_name}.jpg")
+                    cv2.imwrite(image_filename, image)
+                    print(f"Image saved to {image_filename}")
+                    # Send a reply to acknowledge receipt
+                    self.image_hub.send_reply(b'Image received')
+                    # image_filename = os.path.join(save_dir, f"raspberrypi.jpg")
 
-                labels, annotatedImage = image_recog.predict_image(image_filename, self.get_model_path())
-                for label in labels:
-                    if label == 'bullseye-id10':
-                        self.image_hub.send_reply(b'continue')
-                        break
-                    else:
-                        self.image_hub.send_reply(b'stop')
-                        break
+                    model = image_recog_script.load_model(self.get_model_path())
+                    labels, annotatedImage = image_recog_script.predict_image(image_filename, model)
+                    print('Model path: ', self.get_model_path())
+                    # for label in labels:
+                    #     if label == 'bullseye-id10':
+                    #         self.image_hub.send_reply(b'continue')
+                    #         break
+                    #     else:
+                    #         self.image_hub.send_reply(b'stop')
+                    #         break
 
-                annotated_image_path = 'annotated_image.jpg'
-                annotatedImage.save(annotated_image_path)
+                    annotated_image_path = 'annotated_image.jpg'
+                    annotatedImage.save(annotated_image_path)
 
             except Exception as e:
                 print(f"Failed to receive image: {e}")
-                break
+                # break

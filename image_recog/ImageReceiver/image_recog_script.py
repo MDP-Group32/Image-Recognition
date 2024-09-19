@@ -7,8 +7,8 @@ import pandas as pd
 from ultralytics import YOLO
 
 # connection to rpi
-from Client import PCClient
-pc_client = PCClient(ip="192.168.32.1", port=5000)  # Use the RPi's IP
+# from Client import PCClient
+# pc_client = PCClient(ip="192.168.32.1", port=5000)  # Use the RPi's IP
 
 
 def load_model(model_path):
@@ -77,13 +77,13 @@ def main(image_path, model_path):
     annotated_image_path = 'annotated_image.jpg'
     annotated_image.save(annotated_image_path)
 
-    for label in labels:
-        if label == 'bullseye-id10':
-            pc_client.send('c')
-            break
-        else:
-            pc_client.send('s')
-            break
+    # for label in labels:
+    #     if label == 'bullseye-id10':
+    #         pc_client.send('c')
+    #         break
+    #     else:
+    #         pc_client.send('s')
+    #         break
     
     # print(f"Recognised Labels ranked by estimated distance from the camera: {labels}")
     print(f"Recognised image saved as {annotated_image_path}")
