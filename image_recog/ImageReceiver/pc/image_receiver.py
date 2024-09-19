@@ -117,10 +117,10 @@ class ImageReceiver:
                     print('Model path: ', self.get_model_path())
                     # for label in labels:
                     #     if label == 'bullseye-id10':
-                    #         self.image_hub.send_reply(b'continue')
+                    #         self.image_hub.send_reply(b'continue') # this line throws error --> need to modify to send message to rpi
                     #         break
                     #     else:
-                    #         self.image_hub.send_reply(b'stop')
+                    #         self.image_hub.send_reply(b'stop') # this line throws error --> need to modify to send message to rpi
                     #         break
 
                     annotated_image_path = 'annotated_image.jpg'
