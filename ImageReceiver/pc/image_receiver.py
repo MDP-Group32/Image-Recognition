@@ -13,7 +13,7 @@ class TestSending:
         print('Current dir: ', current_dir)
         
         # Construct the path to the "images" directory one level above
-        model_dir = os.path.abspath(os.path.join(current_dir, '..', '..', 'Image-Recog', 'best.pt'))
+        model_dir = os.path.abspath(os.path.join(current_dir, '..', '..', 'image_recog', 'best.pt'))
         print('Model dir: ', model_dir)
         return model_dir
     
@@ -53,7 +53,7 @@ class ImageReceiver:
         print('Current dir: ', current_dir)
         
         # Construct the path to the "images" directory one level above
-        model_dir = os.path.abspath(os.path.join(current_dir, '..', '..', 'Image-Recog', 'best.pt'))
+        model_dir = os.path.abspath(os.path.join(current_dir, '..', '..', 'image_recog', 'best.pt'))
         print('Model dir: ', model_dir)
         return model_dir
 
@@ -99,10 +99,21 @@ class ImageReceiver:
                 image_filename = os.path.join(save_dir, f"{rpi_name}.jpg")
                 cv2.imwrite(image_filename, image)
                 print(f"Image saved to {image_filename}")
-                labels, annotatedImage = image_recog.predict_image(image_filename, self.get_model_path())
-
                 # Send a reply to acknowledge receipt
                 self.image_hub.send_reply(b'Image received')
+
+                labels, annotatedImage = image_recog.predict_image(image_filename, self.get_model_path())
+                for label in labels:
+                    if label == 'bullseye-id10':
+                        self.image_hub.send_reply(b'continue')
+                        break
+                    else:
+                        self.image_hub.send_reply(b'stop')
+                        break
+
+                annotated_image_path = 'annotated_image.jpg'
+                annotatedImage.save(annotated_image_path)
+
             except Exception as e:
                 print(f"Failed to receive image: {e}")
                 break
