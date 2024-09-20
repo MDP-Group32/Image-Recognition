@@ -60,7 +60,8 @@ class ImageReceiver:
         
         # Construct the path to the "images" directory one level above
         # model_dir = os.path.abspath(os.path.join(current_dir, '..', '..', 'image_recog', 'best.pt'))
-        model_dir = os.path.abspath(os.path.join(current_dir, '..', '..', 'best.pt'))
+        # model_dir = os.path.abspath(os.path.join(current_dir, '..', '..', 'best.pt'))
+        model_dir = os.path.abspath(os.path.join(current_dir, '..', '..', 'bestv2.pt'))
         print('Model dir: ', model_dir)
         return model_dir
 
