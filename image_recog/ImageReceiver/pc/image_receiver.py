@@ -51,7 +51,7 @@ class ImageReceiver:
         # Initialize ImageHub to receive images
         # self.image_hub = imagezmq.ImageHub(open_port="tcp://192.168.32.14:5555")
         print('init')
-        self.image_hub = imagezmq.ImageHub(open_port="tcp://*:5555")
+        self.image_hub = imagezmq.ImageHub(open_port="tcp://*:5555") # --> update on actual day to ensure 1-to-1 receiving
         print('init finish')
 
     def get_model_path(self):
@@ -61,7 +61,7 @@ class ImageReceiver:
         # Construct the path to the "images" directory one level above
         # model_dir = os.path.abspath(os.path.join(current_dir, '..', '..', 'image_recog', 'best.pt'))
         # model_dir = os.path.abspath(os.path.join(current_dir, '..', '..', 'best.pt'))
-        model_dir = os.path.abspath(os.path.join(current_dir, '..', '..', 'bestv2.pt'))
+        model_dir = os.path.abspath(os.path.join(current_dir, '..', '..', 'bestv2.pt')) # --> running on the version 2 model (20 Sep 24)
         print('Model dir: ', model_dir)
         return model_dir
 
@@ -109,23 +109,24 @@ class ImageReceiver:
                     image_filename = os.path.join(save_dir, f"{rpi_name}.jpg")
                     cv2.imwrite(image_filename, image)
                     print(f"Image saved to {image_filename}")
+
                     # Send a reply to acknowledge receipt
-                    self.image_hub.send_reply(b'Image received')
+                    # self.image_hub.send_reply(b'Image received')
+
                     # image_filename = os.path.join(save_dir, f"raspberrypi.jpg")
 
                     model = image_recog_script.load_model(self.get_model_path())
                     labels, annotatedImage = image_recog_script.predict_image(image_filename, model)
                     print('Model path: ', self.get_model_path())
-                    # for label in labels:
-                    #     if label == 'bullseye-id10':
-                    #         self.image_hub.send_reply(b'continue') # this line throws error --> need to modify to send message to rpi
-                    #         break
-                    #     else:
-                    #         self.image_hub.send_reply(b'stop') # this line throws error --> need to modify to send message to rpi
-                    #         break
-
                     annotated_image_path = 'annotated_image.jpg'
                     annotatedImage.save(annotated_image_path)
+                    for label in labels: # for single recognition (ranked by proximtiy to rpi cam)
+                        if label == 'bullseye-id10':
+                            self.image_hub.send_reply(b'continue')
+                            break
+                        else:
+                            self.image_hub.send_reply(b'stop') 
+                            break
 
             except Exception as e:
                 print(f"Failed to receive image: {e}")
