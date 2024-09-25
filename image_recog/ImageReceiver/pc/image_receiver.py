@@ -120,6 +120,8 @@ class ImageReceiver:
                     print('Model path: ', self.get_model_path())
                     annotated_image_path = 'annotated_image.jpg'
                     annotatedImage.save(annotated_image_path)
+                    if len(labels) == 0:
+                        self.image_hub.send_reply(b'image not recognised')
                     for label in labels: # for single recognition (ranked by proximtiy to rpi cam)
                         if label == 'bullseye-id10':
                             self.image_hub.send_reply(b'continue')
