@@ -98,10 +98,10 @@ class ImageReceiver:
         #     print(f'{image_file} not found in the current directory.')
 
     def receive_image(self):
-        print('before loop')
+        print('Initiating Image Recognition')
         while True:
             try:
-                    print('entered loop')
+                    print('Waiting to receive image from rpi')
                     # Receiving image from rpi
                     metadata, image = self.image_hub.recv_image()
                     data = metadata.split(': ')
