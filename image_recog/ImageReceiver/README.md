@@ -29,7 +29,7 @@ source venv/bin/activate
 ```
 which python
 ```
-- It should show a path like `algorithms-server/venv/bin/python`
+- It should show a path like `Image-Recognition/venv/bin/python`
 4. Install dependencies:
 ```
 pip install -r requirements.txt
@@ -59,6 +59,7 @@ NOTE: If running on windows comment out: `uvloop==0.20.0` dependency because it 
 ### Running the image recognition receiver  
 1. navigate to and run pcRecieveImg.py
 ```
+cd image_recog/ImageReceiver
 python3 pcRecieveImg.py
 ```
 2. you should see the following messages
