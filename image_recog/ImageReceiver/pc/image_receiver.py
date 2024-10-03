@@ -6,6 +6,7 @@ import image_recog_script
 from Client import PCClient
 from PIL import Image
 import matplotlib.pyplot as plt
+import time
 
 # from image_recog import Client
 
@@ -99,11 +100,27 @@ class ImageReceiver:
 
     def receive_image(self):
         print('Initiating Image Recognition')
+        pc_client = PCClient(ip="192.168.32.1", port=5000)
         while True:
+            if pc_client.connect():
+                while True:
+                    image_expected = int(pc_client.receive())
+                    if image_expected:
+                        print(f"Expecting {image_expected} images from RPi")
+                        break
+                break
+            else: 
+                print("Message communication not esbalished, retrying in 1 second")
+                time.sleep(1)
+
+        pc_client.close()
+
+        while image_expected > 0:
             try:
                     print('Waiting to receive image from rpi')
                     # Receiving image from rpi
                     metadata, image = self.image_hub.recv_image()
+                    print('here')
                     data = metadata.split(': ')
                     rpi_name = data[0]
                     obstacle_id = data[1]
@@ -135,29 +152,42 @@ class ImageReceiver:
                     model = image_recog_script.load_model(self.get_model_path())
                     labels, annotatedImage = image_recog_script.predict_image(image_filename, model)
                     if len(labels) == 0: # Handling failure to recognise image
-                        self.image_hub.send_reply(b'image not recognised')
+                        annotated_image_path = os.path.join(save_dir, f"{obstacle_id}_not recognised.jpg")
+                        annotatedImage.save(annotated_image_path)
+                        self.saved_image_paths.append((obstacle_id, annotated_image_path))
+                        print(f"not recognised image saved to {annotated_image_path}")
+                        message = 'image not recognised'
+                        result = message.encode('utf-8')
+                        self.image_hub.send_reply(result) 
+                        print(f"Sent reply: image not recognised")
+                        image_expected = image_expected - 1                            
+                        continue
+
                     for label in labels: # For single recognition (ranked by proximtiy to rpi cam)
                         if label == 'bullseye-id10':
-                            self.image_hub.send_reply(b'continue')
-                            print(f"Sent reply: continue")
-                            break
+                            continue
                         else:
-                            annotated_image_path = os.path.join(save_dir, f"{obstacle_id}_annotated.jpg")
+                            annotated_image_path = os.path.join(save_dir, f"{obstacle_id}_{label}_annotated.jpg")
                             annotatedImage.save(annotated_image_path)
                             self.saved_image_paths.append((obstacle_id, annotated_image_path))
                             print(f"Annotated image saved to {annotated_image_path}")
                             result = label.encode('utf-8')
                             self.image_hub.send_reply(result) 
                             print(f"Sent reply: {label}")
+                            image_expected = image_expected - 1
                             break
 
-            except KeyboardInterrupt:
-                print("KeyboardInterrupt: Stopping image reception.")
-                self.stitch_images()
+            # except KeyboardInterrupt:
+            #     print("KeyboardInterrupt: Stopping image reception.")
+            #     self.stitch_images()
 
             except Exception as e:
-                print(f"Failed to receive image: {e}")
+                print(f"Image Recognition Terminated: {e}")
                 # break
+
+        # self.image_hub.close()
+        self.send_obstacle_data()
+        self.stitch_images()
 
     def stitch_images(self):
         # Sort the saved images by obstacle ID (image name)
@@ -182,3 +212,23 @@ class ImageReceiver:
 
         plt.tight_layout()
         plt.show()
+
+    def send_obstacle_data(self):
+        try:
+            pc_client = PCClient(ip="192.168.32.1", port=5000)
+            self.saved_image_paths.sort(key=lambda x: x[0])
+            formatted_data = "TARGET;" + ";".join([f"{obstacle_id},{os.path.basename(image_path).split('_')[1]}" 
+                                    for obstacle_id, image_path in self.saved_image_paths]) # Current Output 'ID,Result'
+            while True:
+                if pc_client.connect():
+                    print(f"Sending obstacle data: {formatted_data}")
+                    pc_client.send(formatted_data)
+                    print("Data sent successfully.")
+                    break
+                else: 
+                    print("Message communication not esbalished, retrying in 1 second")
+                    time.sleep(1)
+            pc_client.close()
+
+        except Exception as e:
+            print(f"Error while sending obstacle data: {e}")
