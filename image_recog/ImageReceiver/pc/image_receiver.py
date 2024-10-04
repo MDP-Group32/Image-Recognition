@@ -147,7 +147,9 @@ class ImageReceiver:
 
                     # Image recognition and result handling 
                     model = image_recog_script.load_model(self.get_model_path())
+                    print('model loaded')
                     labels, annotatedImage = image_recog_script.predict_image(image_filename, model)
+                    print('reached here')
                     if len(labels) == 0: # Handling failure to recognise image
                         annotated_image_path = os.path.join(save_dir, f"{obstacle_id}_not recognised.jpg")
                         annotatedImage.save(annotated_image_path)
@@ -164,6 +166,7 @@ class ImageReceiver:
                         if label == 'bullseye-id10':
                             continue
                         else:
+                            label = self.convert_label_to_output(label)
                             annotated_image_path = os.path.join(save_dir, f"{obstacle_id}_{label}_annotated.jpg")
                             annotatedImage.save(annotated_image_path)
                             self.saved_image_paths.append((obstacle_id, annotated_image_path))
@@ -179,6 +182,7 @@ class ImageReceiver:
             #     self.stitch_images()
 
             except Exception as e:
+                image_expected = 0
                 print(f"Image Recognition Terminated: {e}")
                 # break
 
@@ -191,7 +195,7 @@ class ImageReceiver:
         self.saved_image_paths.sort(key=lambda x: x[0])  # Sorting by the image name (obstacle ID)
 
         images = [Image.open(path) for _, path in self.saved_image_paths]
-        labels = [obstacle_id for obstacle_id, _ in self.saved_image_paths]  # Get obstacle IDs
+        # obstacle_ids = [obstacle_id for obstacle_id, _ in self.saved_image_paths]  # Get obstacle IDs
         num_images = len(images)
 
         # Create a figure with subplots (one for each image)
@@ -204,8 +208,13 @@ class ImageReceiver:
         for i, (img, ax) in enumerate(zip(images, axes)):
             ax.imshow(img)
             ax.axis('off')
-            obstacle_id = labels[i]
-            ax.set_title(f"Obstacle ID: {obstacle_id}", fontsize=10)  # Replace label accordingly
+            # obstacle_id = obstacle_ids[i]
+            # ax.set_title(f"Obstacle ID: {obstacle_id}", fontsize=10)  # Replace label accordingly
+
+            # Extracting the obstacle ID and the image detection result from the image path
+            obstacle_id, image_path = self.saved_image_paths[i]
+            detection_result = os.path.basename(image_path).split('_')[1]  # Extract detection result from the file name
+            ax.set_title(f"Obstacle ID: {obstacle_id}\nDetection: {detection_result}", fontsize=10)
 
         plt.tight_layout()
         plt.show()
@@ -214,8 +223,8 @@ class ImageReceiver:
         try:
             pc_client = PCClient(ip="192.168.32.1", port=5000)
             self.saved_image_paths.sort(key=lambda x: x[0])
-            formatted_data = "TARGET;" + ";".join([f"{obstacle_id},{os.path.basename(image_path).split('_')[1]}" 
-                                    for obstacle_id, image_path in self.saved_image_paths]) # Current Output 'ID,Result'
+            formatted_data = "TARGET:" + ";".join([f"{obstacle_id},{os.path.basename(image_path).split('_')[1]}" 
+                                    for obstacle_id, image_path in self.saved_image_paths]) # Current Output 'TARGET:ID,Result;ID,Result...'
             while True:
                 if pc_client.connect():
                     print(f"Sending obstacle data: {formatted_data}")
@@ -229,3 +238,43 @@ class ImageReceiver:
 
         except Exception as e:
             print(f"Error while sending obstacle data: {e}")
+
+
+    
+    def convert_label_to_output(self, label):
+        print("original label:", label)
+        label_to_output = {
+            'A_id20': 'A',
+            'B_id21': 'B',
+            'C_id22': 'C',
+            'D_id23': 'D',
+            'E_id24': 'E',
+            'F_id25': 'F',
+            'G_id26': 'G',
+            'H_id27': 'H',
+            'S_id28': 'S',
+            'T_id29': 'T',
+            'U_id30': 'U',
+            'V_id31': 'V',
+            'W_id32': 'W',
+            'X_id33': 'X',
+            'Y_id34': 'Y',
+            'Z_id35': 'Z',
+            'downarrow_id37': 'down',
+            'eight_id18': '8',
+            'five_id15': '5',
+            'four_id14': '4',
+            'leftarrow_id39': 'left',
+            'nine_id19': '9',
+            'one_id11': '1',
+            'rightarrow_id38': 'right',
+            'seven_id17': '7',
+            'six_id16': '6',
+            'stop_id40': 'stop',
+            'three_id13': '3',
+            'two_id12': '2',
+            'uparrow_id36': 'up'
+            }
+        new_label = label_to_output.get(label,'unknown')
+        print("new label: ", new_label)
+        return new_label
