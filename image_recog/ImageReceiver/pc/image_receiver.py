@@ -1,4 +1,5 @@
 import os
+import shutil
 import imagezmq
 import cv2
 import image_recog_script
@@ -6,6 +7,8 @@ from Client import PCClient
 from PIL import Image
 import matplotlib.pyplot as plt
 import time
+
+# from image_recog import Client
 
 class TestSending:
     def __init__(self):
