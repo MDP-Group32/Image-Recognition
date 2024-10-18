@@ -56,19 +56,30 @@ pip install -r requirements.txt
 ```
 NOTE: If running on windows comment out: `uvloop==0.20.0` dependency because it is currently not supported on Windows.
 
-### Running the image recognition receiver  
-1. navigate to and run pcRecieveImg.py
+### Running the image recognition receiver
+1. selecting Task 1 vs Task 2 image recognition
+```
+open pcRecieveImg.py
+
+- for task 1 (comment out task2()) - 
+image_receiver = task1()
+# image_receiver = task2()
+
+- for task 2 (comment out task1()) - 
+# image_receiver = task1()
+image_receiver = task2()
+```
+2. run pcRecieveImg.py
 ```
 cd image_recog/ImageReceiver
 python3 pcRecieveImg.py
 ```
-2. you should see the following messages
+3. you should see the following messages
 ```
 'init
 init finish
 Initiating Image Recognition
 Waiting to receive image from rpi'
 ```
-3. images from rpi will be received and saved under images directory
-4. to terminate the receiver, press any key in the terminal (temp solution, to be integrated with rpi to note last image transmission)
-5. a stitched result containing all received and recognised images will be auto-generated upon terminating the receiver
+4. images from rpi will be received and saved under images directory
+5. a stitched result containing all received and recognised images will be auto-generated upon receiving all expected images from rpi 

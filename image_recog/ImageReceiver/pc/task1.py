@@ -162,6 +162,15 @@ class ImageReceiver:
                         image_expected = image_expected - 1                            
                         continue
 
+                    # calling task 2 model for arrow accuracy
+                    if 'leftarrow_id39' in labels or 'rightarrow_id38' in labels:
+                        print("Left or Right arrow detected, switching to task2v3.pt model for better accuracy.")
+                        model_path_task2 = self.get_model_path('task2v3.pt')
+                        model_task2 = image_recog_script.load_model(model_path_task2)
+                        labels_task2, annotatedImage_task2 = image_recog_script.predict_image(image_filename, model_task2)
+                        labels = labels_task2  # Overwrite labels with task2v3.pt result
+                        print(f"Task2v3 model labels: {labels}")
+
                     for label in labels: # For single recognition (ranked by proximtiy to rpi cam)
                         if label == 'bullseye-id10':
                             continue

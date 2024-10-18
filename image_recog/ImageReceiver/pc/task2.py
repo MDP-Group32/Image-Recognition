@@ -69,7 +69,7 @@ class ImageReceiver:
                     rpi_name = data[0]
                     image_id = data[1]
                     print(f"Received image {image_id} from {rpi_name}")
-                    image_processed =+ 1
+                    image_processed += 1
 
                     # # Receiving obstacle ID from rpi
                     # if self.pc_client.connect():
@@ -98,21 +98,26 @@ class ImageReceiver:
                     print('model loaded')
                     labels, annotatedImage = image_recog_script.predict_image(image_filename, model)
                     print('reached here')
+
+                    right = 'rightarrow_id38'
+                    left = 'leftarrow_id39'
+                    default_label = right # change here the default direction
+
                     if len(labels) == 0: # Handling failure to recognise image
-                        annotated_image_path = os.path.join(save_dir, f"{image_id}_not recognised.jpg")
+                        print("Opting for default direction")
+                        label = self.convert_label_to_output(default_label)
+                        annotated_image_path = os.path.join(save_dir, f"{image_id}_{label}_annotated.jpg")
                         annotatedImage.save(annotated_image_path)
                         self.saved_image_paths.append((image_id, annotated_image_path))
-                        print(f"not recognised image saved to {annotated_image_path}")
-                        message = 'image not recognised'
-                        result = message.encode('utf-8')
+                        print(f"Annotated image saved to {annotated_image_path}")
+                        result = label.encode('utf-8')
                         self.image_hub.send_reply(result) 
-                        print(f"Sent reply: image not recognised")                         
-                        continue
+                        print(f"Sent reply: {result}")
 
-                    for label in labels: # For single recognition (ranked by proximtiy to rpi cam)
-                        if label == 'bullseye-id10':
-                            continue
-                        else:
+                    found = False  # Flag to check if 'left' or 'right' has been found
+                    for label in labels:  # For single recognition (ranked by proximity to RPi cam)
+                        if label == 'leftarrow_id39' or label == 'rightarrow_id38':
+                            # If 'left' or 'right' is found, process the label and exit the loop
                             label = self.convert_label_to_output(label)
                             annotated_image_path = os.path.join(save_dir, f"{image_id}_{label}_annotated.jpg")
                             annotatedImage.save(annotated_image_path)
@@ -121,7 +126,19 @@ class ImageReceiver:
                             result = label.encode('utf-8')
                             self.image_hub.send_reply(result) 
                             print(f"Sent reply: {result}")
+                            found = True
                             break
+                    if not found:
+                        print("Opting for default direction")
+                        label = self.convert_label_to_output(default_label)
+                        annotated_image_path = os.path.join(save_dir, f"{image_id}_{label}_annotated.jpg")
+                        annotatedImage.save(annotated_image_path)
+                        self.saved_image_paths.append((image_id, annotated_image_path))
+                        print(f"Annotated image saved to {annotated_image_path}")
+                        result = label.encode('utf-8')
+                        self.image_hub.send_reply(result) 
+                        print(f"Sent reply: {result}")
+
 
             # except KeyboardInterrupt:
             #     print("KeyboardInterrupt: Stopping image reception.")
