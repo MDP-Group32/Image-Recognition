@@ -59,6 +59,7 @@ class ImageReceiver:
     def receive_image(self):
         print('Initiating Image Recognition')
         image_processed = 0
+        labels_to_send = []
         while image_processed < 2:
             try:
                     print('Waiting to receive image from rpi')
@@ -103,6 +104,7 @@ class ImageReceiver:
                     left = 'leftarrow_id39'
                     default_label = right # change here the default direction
 
+                    # Strategy 1: current default
                     if len(labels) == 0: # Handling failure to recognise image
                         print("Opting for default direction")
                         label = self.convert_label_to_output(default_label)
@@ -128,6 +130,7 @@ class ImageReceiver:
                             print(f"Sent reply: {result}")
                             found = True
                             break
+
                     if not found:
                         print("Opting for default direction")
                         label = self.convert_label_to_output(default_label)
@@ -138,6 +141,97 @@ class ImageReceiver:
                         result = label.encode('utf-8')
                         self.image_hub.send_reply(result) 
                         print(f"Sent reply: {result}")
+
+                    #-----------------------------------------------------------------------------------------------------------
+
+                    # # Strategy 2: Use 1st image recognition as back up
+                    # if image_processed == 1:
+                    #     found = False
+                    #     if len(labels) == 0: # Handling failure to recognise image
+                    #         print("Opting for default direction")
+                    #         label = self.convert_label_to_output(default_label)
+                    #         annotated_image_path = os.path.join(save_dir, f"{image_id}_{label}_annotated.jpg")
+                    #         annotatedImage.save(annotated_image_path)
+                    #         self.saved_image_paths.append((image_id, annotated_image_path))
+                    #         print(f"Annotated image saved to {annotated_image_path}")
+                    #         result = label.encode('utf-8')
+                    #         self.image_hub.send_reply(result) 
+                    #         print(f"Sent reply: {result}")
+
+                    #     for label in labels: # For dual shot with first image as back up
+                    #         if label == 'leftarrow_id39' or label == 'rightarrow_id38':
+                    #             label = self.convert_label_to_output(label)
+                    #             labels_to_send.append(label)
+                    #             found = True
+                    #             if len(labels_to_send) == 2:
+                    #                 break
+                    #     label = labels_to_send[0]
+                    #     if not found:
+                    #             print("Opting for default direction")
+                    #             label = self.convert_label_to_output(default_label)
+                    #             annotated_image_path = os.path.join(save_dir, f"{image_id}_{label}_annotated.jpg")
+                    #             annotatedImage.save(annotated_image_path)
+                    #             self.saved_image_paths.append((image_id, annotated_image_path))
+                    #             print(f"Annotated image saved to {annotated_image_path}")
+                    #             result = label.encode('utf-8')
+                    #             self.image_hub.send_reply(result) 
+                    #             print(f"Sent reply: {result}")
+                    #     annotated_image_path = os.path.join(save_dir, f"{image_id}_{label}_annotated.jpg")
+                    #     annotatedImage.save(annotated_image_path)
+                    #     self.saved_image_paths.append((image_id, annotated_image_path))
+                    #     print(f"Annotated image saved to {annotated_image_path}")
+                    #     result = label.encode('utf-8')
+                    #     self.image_hub.send_reply(result) 
+                    #     print(f"Sent reply: {result}")
+                    #     break
+
+                    # if image_processed == 2:
+                    #     if len(labels) == 0:
+                    #         if len(labels_to_send) == 0:
+                    #             label = self.convert_label_to_output(default_label)
+                    #             break
+                    #         label = labels_to_send[0]
+                    #     else:
+                    #         for label in labels:
+                    #             if label == 'leftarrow_id39' or label == 'rightarrow_id38':
+                    #                 label = self.convert_label_to_output(label)
+                    #                 break
+                    #     annotated_image_path = os.path.join(save_dir, f"{image_id}_{label}_annotated.jpg")
+                    #     annotatedImage.save(annotated_image_path)
+                    #     self.saved_image_paths.append((image_id, annotated_image_path))
+                    #     print(f"Annotated image saved to {annotated_image_path}")
+                    #     result = label.encode('utf-8')
+                    #     self.image_hub.send_reply(result) 
+                    #     print(f"Sent reply: {result}")
+                    #     break
+                        
+                    #-----------------------------------------------------------------------------------------------------------
+
+                    # Strategy 3: Single Recognition (not recommended with lower accuracy)
+                    # for label in labels:  # For single shot recognition
+                    #     if label == 'leftarrow_id39' or label == 'rightarrow_id38':
+                    #         # If 'left' or 'right' is found, process the label
+                    #         label = self.convert_label_to_output(label)
+                            
+                    #         # Add the label to the list to send
+                    #         labels_to_send.append(label)
+                            
+                    #         # Check if we have found two arrows
+                    #         if len(labels_to_send) == 2:
+                    #             # Create the result string from the two labels
+                    #             result = "".join(labels_to_send)
+                    #             # Annotate and save the image using the result as part of the file name
+                    #             annotated_image_path = os.path.join(save_dir, f"{image_id}_{result}_annotated.jpg")
+                    #             annotatedImage.save(annotated_image_path)
+                    #             self.saved_image_paths.append((image_id, annotated_image_path))
+                    #             print(f"Annotated image saved to {annotated_image_path}")
+                                
+                    #             # Send the result back
+                    #             self.image_hub.send_reply(result.encode('utf-8'))
+                    #             print(f"Sent reply: {result}")
+                    #             break  # Exit the loop after sending the first two arrows
+
+                    
 
 
             # except KeyboardInterrupt:
